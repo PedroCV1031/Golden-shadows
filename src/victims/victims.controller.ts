@@ -17,18 +17,22 @@ export class VictimsController {
     return this.victimsService.findAll();
   }
 
-  @Get(':caseId')
-  findOne(@Param('caseId') caseId: string) {
-    return this.victimsService.findOne(caseId);
+  @Get(':name/:family')
+  findOne(@Param('name') name: string, @Param('family') family: string) {
+    return this.victimsService.findOne(name, family);
   }
 
-  @Patch(':caseId')
-  update(@Param('caseId') caseId: string, @Body() updateVictimDto: UpdateVictimDto) {
-    return this.victimsService.update(caseId, updateVictimDto);
+  @Patch(':name/:family')
+  update(
+    @Param('name') name: string,
+    @Param('family') family: string,
+    @Body() updateVictimDto: UpdateVictimDto,
+  ) {
+    return this.victimsService.update(name, family, updateVictimDto);
   }
 
-  @Delete(':caseId')
-  remove(@Param('caseId') caseId: string) {
-    return this.victimsService.remove(caseId);
+  @Delete(':name/:family')
+  remove(@Param('name') name: string, @Param('family') family: string) {
+    return this.victimsService.remove(name, family);
   }
 }

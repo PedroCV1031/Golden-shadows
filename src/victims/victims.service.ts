@@ -15,51 +15,50 @@ export class VictimsService {
 
   async create(createVictimDto: CreateVictimDto) {
     const victim = await this.victimModel.create(createVictimDto);
-    const existingCase = await this.caseModel.findOne({ caseId: createVictimDto.caseId }).exec();
-    if (!existingCase) {
-      await this.caseModel.create({
-        caseId: createVictimDto.caseId,
-        victimNames: [createVictimDto.name],
-        detectives: [], 
-        murderMethods: [createVictimDto.murderMethod],
-        relatedCases: [],
-      });
-    }
+    await this.caseModel.updateOne(
+      { caseId: createVictimDto.caseId },
+      {
+        $setOnInsert: {
+          caseId: createVictimDto.caseId,
+          detectives: [],
+          relatedCases: [],
+        },
+        $addToSet: {
+          victimNames: createVictimDto.name,
+          murderMethods: createVictimDto.murderMethod,
+        },
+      },
+      { upsert: true }
+    );
     return victim;
   }
 
  findAll() {
     return this.victimModel.find({});
   }
-
-  async findOne(caseId: string) {
-    const victim = await this.victimModel.findOne({caseId:caseId});
-    if(!victim){
-      throw new NotFoundException
-      ("Caso no encontrado");
+  
+  async findOne(name: string, family: string) {
+    const victim = await this.victimModel.findOne({ name, family });
+    if (!victim) {
+      throw new NotFoundException("Caso no encontrado");
     }
     return victim;
   }
 
-  async update(caseId: string, updateVictimDto: UpdateVictimDto) {
-    const victim = await this.findOne(caseId);
-    await this.victimModel.updateOne({ caseId }, updateVictimDto);
-    const lookupCaseId = updateVictimDto.caseId ?? caseId;
+  async update(name: string, family: string, updateVictimDto: UpdateVictimDto) {
+    const victim = await this.findOne(name, family);
+    await this.victimModel.updateOne({ name, family }, updateVictimDto);
 
-    if (!victim) {
-      throw new NotFoundException("Caso no encontrado");
-    }
+    const updatedName = updateVictimDto.name ?? name;
+    const updatedFamilyName = updateVictimDto.family ?? family;
 
-    return this.findOne(lookupCaseId);
+    return this.findOne(updatedName, updatedFamilyName);
   }
 
-  async remove(caseId: string) {
-    const victim = await this.findOne(caseId);
-    await this.victimModel.deleteOne({ caseId });
-    if(!victim){
-      throw new NotFoundException
-      ("Caso no encontrado");
-    }
+  async remove(name: string, family: string) {
+    const victim = await this.findOne(name, family);
+    await this.victimModel.deleteOne({ name, family});
+
     return victim;
   }
 }
